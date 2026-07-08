@@ -1,0 +1,6 @@
+{
+  "name": "House Ceramic Sales Dashboard",
+  "description": "Tablero de ventas gamificado e interactivo con pista de carreras, misiones secundarias y control de gestión para House Ceramic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

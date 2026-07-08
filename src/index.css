@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer utilities {
+  .neon-glow-green {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.4), inset 0 0 6px rgba(34, 197, 94, 0.1);
+  }
+  .neon-glow-blue {
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4), inset 0 0 6px rgba(59, 130, 246, 0.1);
+  }
+  .neon-glow-red {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4), inset 0 0 6px rgba(239, 68, 68, 0.1);
+  }
+  .neon-glow-purple {
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.4), inset 0 0 6px rgba(168, 85, 247, 0.1);
+  }
+  .neon-glow-yellow {
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.4), inset 0 0 6px rgba(234, 179, 8, 0.1);
+  }
+  
+  .neon-text-green {
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+  }
+  .neon-text-yellow {
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.8);
+  }
+  .neon-text-blue {
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+  }
+  .neon-text-red {
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+  }
+}
+
+/* Custom glass backgrounds and game assets styling */
+:root {
+  --bg: #0b0e14;
+  --panel: #161b22;
+  --accent-cyan: #00d2ff;
+  --accent-purple: #9d50bb;
+  --accent-green: #00ff87;
+  --text: #e6edf3;
+  --gold: #ffd700;
+  --race-track-line: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.xp-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: #21262d;
+  position: relative;
+  overflow: hidden;
+}
+
+.xp-fill {
+  height: 100%;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+}
+
+.milestone-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.milestone-label {
+  font-size: 10px;
+  color: #8b949e;
+  position: absolute;
+  top: -18px;
+  transform: translateX(-50%);
+}
+
+.car-indicator {
+  width: 24px;
+  height: 12px;
+  background: #fff;
+  border-radius: 2px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 8px #fff;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
