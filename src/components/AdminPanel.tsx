@@ -14,7 +14,9 @@ import {
   X, 
   Compass, 
   Target,
-  Edit2
+  Edit2,
+  Trash2,
+  Search
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -25,6 +27,8 @@ interface AdminPanelProps {
   missionProgress: MissionProgress[];
   selectedMonth: string; // 'YYYY-MM'
   onAddRecord: (record: Omit<DailyRecord, 'id'>) => void;
+  onUpdateRecord?: (id: string, record: Omit<DailyRecord, 'id'>) => void;
+  onDeleteRecord?: (id: string) => void;
   onUpdateGoal: (sellerId: string, month: string, goalAmount: number) => void;
   onAddMission: (mission: Omit<Mission, 'id'>) => void;
   onUpdateMissionProgress: (missionId: string, sellerId: string, count: number) => void;
@@ -46,6 +50,8 @@ export default function AdminPanel({
   missionProgress,
   selectedMonth,
   onAddRecord,
+  onUpdateRecord,
+  onDeleteRecord,
   onUpdateGoal,
   onAddMission,
   onUpdateMissionProgress,
@@ -67,6 +73,13 @@ export default function AdminPanel({
   const [clientsServed, setClientsServed] = useState<string>('');
   const [cleanlinessPassed, setCleanlinessPassed] = useState<boolean>(true);
   const [punctualityPassed, setPunctualityPassed] = useState<boolean>(true);
+
+  // Editing state for daily record
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+
+  // Filter state for logs history
+  const [historyFilterDate, setHistoryFilterDate] = useState<string>('');
+  const [historyFilterSellerId, setHistoryFilterSellerId] = useState<string>('');
 
   // Quick log date defaults to today
   const [logDate, setLogDate] = useState<string>(() => {
@@ -113,17 +126,32 @@ export default function AdminPanel({
     const sellerObj = sellers.find((s) => s.id === selectedSellerId);
     const storeId = sellerObj ? sellerObj.storeId : '102';
 
-    onAddRecord({
-      date,
-      sellerId: selectedSellerId,
-      storeId,
-      salesWithTax: Number(salesWithTax),
-      salesWithoutTax: Number(salesWithoutTax),
-      productsSold: Number(productsSold),
-      clientsServed: Number(clientsServed),
-      cleanlinessPassed,
-      punctualityPassed,
-    });
+    if (editingRecordId && onUpdateRecord) {
+      onUpdateRecord(editingRecordId, {
+        date,
+        sellerId: selectedSellerId,
+        storeId,
+        salesWithTax: Number(salesWithTax),
+        salesWithoutTax: Number(salesWithoutTax),
+        productsSold: Number(productsSold),
+        clientsServed: Number(clientsServed),
+        cleanlinessPassed,
+        punctualityPassed,
+      });
+      setEditingRecordId(null);
+    } else {
+      onAddRecord({
+        date,
+        sellerId: selectedSellerId,
+        storeId,
+        salesWithTax: Number(salesWithTax),
+        salesWithoutTax: Number(salesWithoutTax),
+        productsSold: Number(productsSold),
+        clientsServed: Number(clientsServed),
+        cleanlinessPassed,
+        punctualityPassed,
+      });
+    }
 
     // Clear inputs and flash success
     setSalesWithTax('');
@@ -524,9 +552,38 @@ export default function AdminPanel({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* SUB-PANEL 1: ENTER DAILY SALES RECORD */}
-        <div className="glass-panel p-6 relative">
+        <div id="registrar-ventas-form" className={`glass-panel p-6 relative transition-all duration-300 ${
+          editingRecordId 
+            ? 'border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.15)] bg-amber-950/5' 
+            : 'border-emerald-500/15'
+        }`}>
+          {editingRecordId && (
+            <div className="mb-4 bg-amber-500/20 border border-amber-500/40 text-amber-200 font-mono text-[11px] p-3 rounded-lg flex items-center justify-between animate-pulse">
+              <span>
+                ⚠️ <strong>MODO EDICIÓN ACTIVO:</strong> Modificando reporte del piloto <strong>{sellers.find(s => s.id === selectedSellerId)?.name}</strong> para la fecha <strong>{date.split('-').reverse().join('/')}</strong>.
+              </span>
+              <button 
+                type="button"
+                onClick={() => {
+                  setEditingRecordId(null);
+                  setDate(new Date().toISOString().split('T')[0]);
+                  setSalesWithTax('');
+                  setSalesWithoutTax('');
+                  setProductsSold('');
+                  setClientsServed('');
+                  setCleanlinessPassed(true);
+                  setPunctualityPassed(true);
+                }}
+                className="bg-amber-600 hover:bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-[9px] font-bold font-mono cursor-pointer transition-colors"
+              >
+                ✕ CANCELAR
+              </button>
+            </div>
+          )}
+
           <h3 className="text-sm font-bold font-mono uppercase text-slate-300 tracking-wider flex items-center gap-2 mb-6">
-            <Settings className="w-4 h-4 text-emerald-400" /> REGISTRAR VENTAS DIARIAS
+            <Settings className={`w-4 h-4 ${editingRecordId ? 'text-amber-500 animate-spin' : 'text-emerald-400'}`} /> 
+            {editingRecordId ? 'EDITAR REPORTE DIARIO DE VENTAS' : 'REGISTRAR VENTAS DIARIAS'}
           </h3>
 
           <form onSubmit={handleSalesSubmit} className="space-y-4">
@@ -680,14 +737,29 @@ export default function AdminPanel({
 
             <button 
               type="submit"
-              className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold font-display tracking-tight text-sm py-2.5 rounded-lg transition-all duration-150 flex items-center justify-center gap-2"
+              className={`w-full mt-4 font-bold font-display tracking-tight text-sm py-2.5 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+                editingRecordId 
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950' 
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-slate-950'
+              }`}
             >
-              <Plus className="w-4 h-4 text-slate-950 stroke-[3]" /> REGISTRAR REPORTE DIARIO
+              {editingRecordId ? (
+                <>
+                  <Check className="w-4 h-4 text-slate-950 stroke-[3]" /> GUARDAR CAMBIOS
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 text-slate-950 stroke-[3]" /> REGISTRAR REPORTE DIARIO
+                </>
+              )}
             </button>
 
             {submitSuccess && (
               <div className="bg-emerald-950/80 border border-emerald-500 text-emerald-400 font-mono text-xs p-3 rounded-lg text-center animate-bounce mt-2">
-                ¡REPORTE GUARDADO CON ÉXITO! Los autos han avanzado en la pista. 🏎️💨
+                {editingRecordId 
+                  ? '¡CAMBIOS GUARDADOS CON ÉXITO! El tablero de control se ha actualizado. 🔄🏁'
+                  : '¡REPORTE GUARDADO CON ÉXITO! Los autos han avanzado en la pista. 🏎️💨'
+                }
               </div>
             )}
           </form>
@@ -1166,6 +1238,213 @@ export default function AdminPanel({
               </div>
             )}
           </div>
+        </div>
+
+        {/* HISTORIAL DÍA A DÍA - CONTROL DE REPORTES */}
+        <div className="glass-panel p-6 mt-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
+            <div>
+              <h3 className="text-sm font-bold font-mono uppercase text-slate-300 tracking-wider flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-cyan-400" /> HISTORIAL DÍA A DÍA - CONTROL DE REPORTES
+              </h3>
+              <p className="text-slate-500 text-xs mt-1">
+                Aquí puedes ver de forma cronológica la información diaria que se sube al sistema. Si hay algún error, utiliza los botones de editar o borrar.
+              </p>
+            </div>
+
+            {/* Filtros */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <select
+                  value={historyFilterSellerId}
+                  onChange={(e) => setHistoryFilterSellerId(e.target.value)}
+                  className="bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                >
+                  <option value="">Todos los pilotos</option>
+                  {sellers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="date"
+                  value={historyFilterDate}
+                  onChange={(e) => setHistoryFilterDate(e.target.value)}
+                  className="bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 font-mono cursor-pointer"
+                />
+              </div>
+
+              {(historyFilterSellerId || historyFilterDate) && (
+                <button
+                  onClick={() => {
+                    setHistoryFilterSellerId('');
+                    setHistoryFilterDate('');
+                  }}
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-mono transition-colors cursor-pointer"
+                >
+                  Limpiar Filtros
+                </button>
+              )}
+            </div>
+          </div>
+
+          {(() => {
+            const sortedRecords = [...records].sort((a, b) => b.date.localeCompare(a.date));
+            const filteredRecords = sortedRecords.filter((rec) => {
+              const matchesSeller = !historyFilterSellerId || rec.sellerId === historyFilterSellerId;
+              const matchesDate = !historyFilterDate || rec.date === historyFilterDate;
+              return matchesSeller && matchesDate;
+            });
+
+            if (filteredRecords.length === 0) {
+              return (
+                <div className="text-center py-12 bg-slate-900/10 border border-dashed border-slate-800 rounded-xl">
+                  <p className="text-xs text-slate-500 font-mono">
+                    No se encontraron reportes que coincidan con los filtros aplicados.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[900px]">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                      <th className="py-3 px-4 font-bold">Fecha</th>
+                      <th className="py-3 px-4 font-bold">Piloto</th>
+                      <th className="py-3 px-4 font-bold">Sede</th>
+                      <th className="py-3 px-4 font-bold text-right">Ventas Con IGV</th>
+                      <th className="py-3 px-4 font-bold text-right">Ventas Sin IGV</th>
+                      <th className="py-3 px-4 font-bold text-center">Productos</th>
+                      <th className="py-3 px-4 font-bold text-center">Clientes</th>
+                      <th className="py-3 px-4 font-bold text-center">Limpieza</th>
+                      <th className="py-3 px-4 font-bold text-center">Puntualidad</th>
+                      <th className="py-3 px-4 font-bold text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850 text-xs">
+                    {filteredRecords.map((rec) => {
+                      const s = sellers.find((seller) => seller.id === rec.sellerId);
+                      const sellerName = s ? s.name : 'Piloto Desconocido';
+                      const carColor = s ? s.avatarColor : 'from-slate-500 to-slate-600';
+                      const carStyle = s ? getCarStyle(s.carImage) : 'formula';
+
+                      // Formatear fecha a DD/MM/YYYY
+                      const formattedDate = rec.date.split('-').reverse().join('/');
+
+                      return (
+                        <tr 
+                          key={rec.id} 
+                          className={`hover:bg-slate-900/20 transition-all ${
+                            editingRecordId === rec.id ? 'bg-amber-950/20 border-l-2 border-l-amber-500' : ''
+                          }`}
+                        >
+                          {/* Fecha */}
+                          <td className="py-3 px-4 font-mono text-slate-300 font-bold">
+                            {formattedDate}
+                          </td>
+                          {/* Piloto */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-6 rounded bg-slate-950 border border-slate-800 flex items-center justify-center p-0.5">
+                                <RaceCar 
+                                  styleName={carStyle} 
+                                  avatarColor={carColor} 
+                                  className="w-7 h-3.5" 
+                                />
+                              </div>
+                              <span className="font-bold text-white">{sellerName}</span>
+                            </div>
+                          </td>
+                          {/* Sede */}
+                          <td className="py-3 px-4 font-mono text-slate-400">
+                            Tienda {rec.storeId}
+                          </td>
+                          {/* Ventas Con IGV */}
+                          <td className="py-3 px-4 text-right font-mono text-emerald-400 font-bold">
+                            S/ {rec.salesWithTax.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          {/* Ventas Sin IGV */}
+                          <td className="py-3 px-4 text-right font-mono text-slate-400 font-medium">
+                            S/ {rec.salesWithoutTax.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          {/* Productos */}
+                          <td className="py-3 px-4 text-center font-mono text-slate-300">
+                            {rec.productsSold}
+                          </td>
+                          {/* Clientes */}
+                          <td className="py-3 px-4 text-center font-mono text-slate-300">
+                            {rec.clientsServed}
+                          </td>
+                          {/* Limpieza */}
+                          <td className="py-3 px-4 text-center">
+                            <span 
+                              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                rec.cleanlinessPassed 
+                                  ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]' 
+                                  : 'bg-red-950/60 text-red-400 border border-red-500/20'
+                              }`}
+                            >
+                              {rec.cleanlinessPassed ? 'Sí 🧼' : 'Faltó ❌'}
+                            </span>
+                          </td>
+                          {/* Puntualidad */}
+                          <td className="py-3 px-4 text-center">
+                            <span 
+                              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                rec.punctualityPassed 
+                                  ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]' 
+                                  : 'bg-red-950/60 text-red-400 border border-red-500/20'
+                              }`}
+                            >
+                              {rec.punctualityPassed ? 'Temprano ⏰' : 'Tarde ❌'}
+                            </span>
+                          </td>
+                          {/* Acciones */}
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingRecordId(rec.id);
+                                  setDate(rec.date);
+                                  setSelectedSellerId(rec.sellerId);
+                                  setSalesWithTax(rec.salesWithTax.toString());
+                                  setSalesWithoutTax(rec.salesWithoutTax.toString());
+                                  setProductsSold(rec.productsSold.toString());
+                                  setClientsServed(rec.clientsServed.toString());
+                                  setCleanlinessPassed(rec.cleanlinessPassed);
+                                  setPunctualityPassed(rec.punctualityPassed);
+                                  document.getElementById('registrar-ventas-form')?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 rounded-lg transition-colors cursor-pointer"
+                                title="Editar reporte"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              {onDeleteRecord && (
+                                <button
+                                  onClick={() => onDeleteRecord(rec.id)}
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                                  title="Eliminar reporte"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

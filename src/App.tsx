@@ -256,6 +256,13 @@ export default function App() {
     }
   };
 
+  const handleUpdateRecord = (id: string, updatedFields: Omit<DailyRecord, 'id'>) => {
+    setRecords((prev) => 
+      prev.map((r) => r.id === id ? { ...r, ...updatedFields } : r)
+    );
+    playSound('coin', isMuted);
+  };
+
   const handleUpdateGoal = (sellerId: string, month: string, goalAmount: number) => {
     setGoals((prev) => {
       // Check if goal for seller + month already exists
@@ -567,7 +574,6 @@ export default function App() {
           <ManagementLog 
             records={records}
             sellers={sellers}
-            onDeleteRecord={handleDeleteRecord}
           />
         )}
 
@@ -580,6 +586,8 @@ export default function App() {
             missionProgress={missionProgress}
             selectedMonth={selectedMonth}
             onAddRecord={handleAddRecord}
+            onUpdateRecord={handleUpdateRecord}
+            onDeleteRecord={handleDeleteRecord}
             onUpdateGoal={handleUpdateGoal}
             onAddMission={handleAddMission}
             onUpdateMissionProgress={handleUpdateMissionProgress}

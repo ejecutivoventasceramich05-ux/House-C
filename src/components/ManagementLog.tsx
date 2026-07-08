@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { DailyRecord, Seller } from '../types';
-import { Calendar, Trash2, CheckCircle, XCircle, Info, Filter, ArrowUpDown } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Info, Filter, ArrowUpDown } from 'lucide-react';
 
 interface ManagementLogProps {
   records: DailyRecord[];
   sellers: Seller[];
-  onDeleteRecord?: (id: string) => void;
 }
 
-export default function ManagementLog({ records, sellers, onDeleteRecord }: ManagementLogProps) {
+export default function ManagementLog({ records, sellers }: ManagementLogProps) {
   const [filterStore, setFilterStore] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
@@ -239,17 +238,6 @@ export default function ManagementLog({ records, sellers, onDeleteRecord }: Mana
                       ⏰ {rec.punctualityPassed ? 'OK' : 'X'}
                     </span>
                   </div>
-
-                  {/* Optional delete trigger for the administrator */}
-                  {onDeleteRecord && (
-                    <button 
-                      onClick={() => onDeleteRecord(rec.id)}
-                      className="text-slate-600 hover:text-red-400 p-1 rounded hover:bg-slate-900 transition-colors"
-                      title="Eliminar registro"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
